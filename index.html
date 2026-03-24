@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediScan AI | Intelligent Medical Report Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-light: #3b82f6;
+        --secondary: #10b981;
+        --dark: #0f172a;
+        --surface: #ffffff;
+        --background: #f8fafc;
+        --text: #334155;
+        --text-light: #64748b;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --success: #10b981;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+        background-color: var(--background);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    header {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        padding: 20px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid rgba(255,255,255,0.5);
+    }
+
+    header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    header h1 i {
+        color: var(--primary);
+        font-size: 28px;
+    }
+
+    /* Main Container */
+    .container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+        width: 100%;
+        flex: 1;
+    }
+
+    /* Upload Section */
+    .upload-section {
+        background: var(--surface);
+        border-radius: 24px;
+        padding: 50px 40px;
+        text-align: center;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.04);
+        border: 1px solid rgba(255,255,255,0.8);
+        transition: transform 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-section:hover {
+        transform: translateY(-5px);
+    }
+
+    .upload-box {
+        border: 2px dashed #cbd5e1;
+        border-radius: 20px;
+        padding: 60px 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f1f5f9;
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto;
+        max-width: 700px;
+    }
+
+    .upload-box:hover, .upload-box.dragover {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .upload-box i {
+        font-size: 54px;
+        color: var(--primary-light);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .upload-box:hover i {
+        transform: scale(1.1);
+    }
+
+    .upload-box h3 {
+        font-size: 20px;
+        color: var(--dark);
+        margin-bottom: 10px;
+    }
+
+    .upload-box p {
+        color: var(--text-light);
+    }
+
+    #file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        border: none;
+        padding: 16px 36px;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        margin-top: 35px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn:disabled {
+        background: #cbd5e1;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Simulation / Loading State */
+    .simulation-container {
+        display: none;
+        padding: 80px 20px;
+        text-align: center;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .simulation-container.active {
+        display: block;
+    }
+
+    .ecg-monitor {
+        width: 100%;
+        max-width: 450px;
+        height: 140px;
+        background: #000;
+        border-radius: 20px;
+        margin: 0 auto 35px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25), inset 0 0 30px rgba(16, 185, 129, 0.15);
+        border: 4px solid #1e293b;
+    }
+
+    .grid-background {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: linear-gradient(rgba(16, 185, 129, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 185, 129, 0.2) 1px, transparent 1px);
+        background-size: 20px 20px;
+        z-index: 1;
+    }
+
+    .ecg-path {
+        stroke: #10b981;
+        stroke-width: 2.5;
+        fill: none;
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: dash 3s linear infinite;
+        filter: drop-shadow(0 0 8px #10b981);
+        position: relative;
+        z-index: 2;
+    }
+
+    .scanner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 30px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.9), transparent);
+        animation: sweep 3s linear infinite;
+        z-index: 3;
+        filter: blur(4px);
+    }
+
+    @keyframes sweep {
+        0% { left: -30%; }
+        100% { left: 130%; }
+    }
+
+    @keyframes dash {
+        to { stroke-dashoffset: 0; }
+    }
+
+    .loading-text {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 12px;
+    }
+
+    .loading-subtext {
+        color: var(--primary);
+        font-size: 18px;
+        font-weight: 500;
+        animation: pulseText 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseText {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+
+    /* Results Dashboard */
+    .results-container {
+        display: none;
+    }
+
+    .results-container.active {
+        display: block;
+        animation: slideUp 0.6s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .card {
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+        border: 1px solid rgba(0,0,0,0.03);
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .card-header i {
+        font-size: 26px;
+        color: var(--primary);
+        background: rgba(37, 99, 235, 0.1);
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .card-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    /* Vitals List */
+    .vital-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 20px;
+        border-radius: 14px;
+        margin-bottom: 15px;
+        background: #f8fafc;
+        border-left: 5px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .vital-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+
+    .vital-item.normal {
+        border-left-color: var(--success);
+        background: rgba(16, 185, 129, 0.05);
+    }
+    .vital-item.normal i { color: var(--success); }
+
+    .vital-item.warning {
+        border-left-color: var(--warning);
+        background: rgba(245, 158, 11, 0.05);
+    }
+    .vital-item.warning i { color: var(--warning); }
+
+    .vital-item.critical {
+        border-left-color: var(--danger);
+        background: rgba(239, 68, 68, 0.05);
+    }
+    .vital-item.critical i { color: var(--danger); }
+
+    .vital-name {
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .vital-status {
+        font-size: 14px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 20px;
+    }
+
+    .normal .vital-status { background: #d1fae5; color: #065f46; }
+    .warning .vital-status { background: #fef3c7; color: #92400e; }
+    .critical .vital-status { background: #fee2e2; color: #991b1b; }
+
+    /* Recommendations */
+    .recommendation-list {
+        list-style: none;
+    }
+
+    .recommendation-list li {
+        padding: 18px;
+        background: rgba(37, 99, 235, 0.03);
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        border-radius: 14px;
+        margin-bottom: 15px;
+        display: flex;
+        gap: 15px;
+        color: var(--text);
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .recommendation-list li i {
+        color: var(--primary);
+        margin-top: 3px;
+        font-size: 18px;
+    }
+
+    /* AI Chatbox */
+    .chatbox-container {
+        grid-column: 1 / -1;
+    }
+
+    .chatbox {
+        background: #f8fafc;
+        border-radius: 18px;
+        padding: 25px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .chat-messages {
+        height: 250px;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .msg {
+        max-width: 80%;
+        padding: 14px 20px;
+        border-radius: 18px;
+        font-size: 15px;
+        line-height: 1.5;
+        animation: fadeIn 0.3s ease;
+        position: relative;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .msg.bot {
+        background: white;
+        color: var(--text);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .msg.user {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+    }
+
+    .chat-input-area {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        background: white;
+        padding: 8px;
+        border-radius: 16px;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .chat-input-area input {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        font-size: 16px;
+        outline: none;
+        background: transparent;
+        font-family: inherit;
+    }
+
+    .btn-icon {
+        background: var(--primary);
+        color: white;
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.3s;
+    }
+
+    .btn-icon:hover {
+        background: var(--primary-light);
+        transform: scale(1.05) rotate(5deg);
+    }
+
+    .btn-icon.mic-active {
+        background: #ef4444 !important;
+        animation: pulseMic 1.5s infinite;
+    }
+
+    @keyframes pulseMic {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Molecule Background Decoration */
+    .bg-decoration {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.04;
+        background-image: radial-gradient(var(--primary) 1px, transparent 1px);
+        background-size: 35px 35px;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="bg-decoration"></div>
+
+<header>
+    <h1><i class="fa-solid fa-notes-medical"></i> MediScan AI</h1>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <span style="font-weight: 600; color: var(--text-light); font-size: 15px;">
+            <i class="fa-solid fa-shield-halved"></i> Secure & Private
+        </span>
+    </div>
+</header>
+
+<div class="container">
+    
+    <!-- Upload Section -->
+    <div class="upload-section" id="upload-panel">
+        <h2 style="font-size: 32px; color: var(--dark); margin-bottom: 20px;">Smart Medical Report Analysis</h2>
+        <p style="color: var(--text-light); margin-bottom: 40px; font-size: 18px;">Upload your lab results or blood work for an instant, simple breakdown.</p>
+        
+        <div class="upload-box" id="drop-area">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h3>Drag & drop your report here</h3>
+            <p>or click to browse from your device (PDF, JPG, PNG)</p>
+            <input type="file" id="file-input" accept=".pdf, .jpg, .png">
+        </div>
+
+        <button class="btn" id="analyze-btn" disabled onclick="startSimulation()">
+            <i class="fa-solid fa-microchip"></i> Analyze with AI
+        </button>
+    </div>
+
+    <!-- Simulation Section -->
+    <div class="simulation-container" id="simulation-panel">
+        <div class="ecg-monitor">
+            <div class="grid-background"></div>
+            <svg width="450" height="140" style="position: absolute; top: 0; left: 0; z-index: 2;">
+                <path class="ecg-path" d="M 0 70 L 60 70 L 80 40 L 110 110 L 130 30 L 150 130 L 170 70 L 220 70 L 280 70 L 300 40 L 330 110 L 350 30 L 370 130 L 390 70 L 450 70" />
+            </svg>
+            <div class="scanner-overlay"></div>
+        </div>
+        <h3 class="loading-text">Extracting Medical Data...</h3>
+        <p class="loading-subtext" id="loading-status">Scanning document context...</p>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-container" id="results-panel">
+        
+        <div style="background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(16,185,129,0.08)); padding: 30px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(37,99,235,0.15);">
+            <div>
+                <h3 style="font-size: 24px; color: var(--dark); margin-bottom: 8px;">Analysis Complete</h3>
+                <p style="color: var(--text-light); font-size: 16px;">We've simplified your report into actionable insights.</p>
+            </div>
+            <button class="btn" style="margin: 0; padding: 12px 24px; font-size: 15px;" onclick="resetApp()">
+                <i class="fa-solid fa-arrow-rotate-right"></i> New Report
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Key Vitals -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <h3 class="card-title">Key Biomarkers</h3>
+                </div>
+                
+                <div class="vital-item normal">
+                    <div class="vital-name">
+                        <i class="fa-solid fa-droplet"></i> Blood Sugar (Fasting)
+                    </div>
+                    <div class="vital-status">92 mg/dL - Normal</div>
+                </div>
+
+                <div class="vital-item warning">
+                    <div class="vital-name">
+                        <i class="fa-solid fa-burger"></i> LDL Cholesterol
+                    </div>
+                    <div class="vital-status">140 mg/dL - Elevated</div>
+                </div>
+
+                <div class="vital-item critical">
+                    <div class="vital-name">
+                        <i class="fa-solid fa-truck-medical"></i> Hemoglobin
+                    </div>
+                    <div class="vital-status">10.2 g/dL - Low</div>
+                </div>
+            </div>
+
+            <!-- AI Recommendations -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    <h3 class="card-title">AI Prescribed Actions</h3>
+                </div>
+                
+                <ul class="recommendation-list">
+                    <li><i class="fa-solid fa-circle-check"></i> Monitor your cholesterol by reducing saturated fats in your diet.</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Address your low hemoglobin by incorporating iron-rich foods like spinach and red meat.</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Your blood sugar is well within the healthy range. Keep up the good work!</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Consider scheduling a follow-up with your primary physician regarding your hemoglobin levels.</li>
+                </ul>
+            </div>
+
+            <!-- Chatbot -->
+            <div class="card chatbox-container">
+                <div class="card-header" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fa-solid fa-robot"></i>
+                        <h3 class="card-title">Ask Follow-up Questions</h3>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="bot-lang" style="background: var(--surface); border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; font-size: 13px; outline: none; cursor: pointer;">
+                            <option value="auto">Language: Auto</option>
+                            <option value="tamil">தமிழ் (Tamil)</option>
+                            <option value="tanglish">Tanglish</option>
+                            <option value="english">English</option>
+                        </select>
+                        <button id="speaker-btn" class="btn-icon" style="background: var(--text-light); width: 40px; height: 40px;" onclick="toggleSpeaker()" title="Toggle Voice Output">
+                            <i class="fa-solid fa-volume-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chatbox">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="msg bot">Hello! I'm your MediScan AI assistant. You can ask me to explain any term from your report in simple words.</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <button class="btn-icon" id="mic-btn" onclick="toggleVoiceRecognition()" style="background: #10b981;"><i class="fa-solid fa-microphone"></i></button>
+                        <input type="text" id="chat-input" placeholder="Ask your question or use the mic..." onkeypress="handleEnter(event)">
+                        <button class="btn-icon" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div id="voice-status" style="font-size: 13px; color: var(--text-light); text-align: center; margin-top: 8px; display: none; font-weight: 500;"><i class="fa-solid fa-ear-listen" style="color: var(--danger);"></i> Listening... Speak in English, Tamil or Tanglish</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const dropArea = document.getElementById('drop-area');
+
+    // Advanced developers can set `localStorage.setItem('gemini_api_key', 'key')` directly from devtools.
+    
+    // File Upload Handlers
+    fileInput.addEventListener('change', function() {
+        if(this.files && this.files.length > 0) {
+            analyzeBtn.disabled = false;
+            dropArea.querySelector('h3').innerText = this.files[0].name;
+            dropArea.querySelector('h3').style.color = 'var(--primary)';
+            dropArea.style.borderColor = 'var(--primary)';
+        }
+    });
+
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('dragover');
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('dragover');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('dragover');
+        if(e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            analyzeBtn.disabled = false;
+            dropArea.querySelector('h3').innerText = e.dataTransfer.files[0].name;
+            dropArea.querySelector('h3').style.color = 'var(--primary)';
+            dropArea.style.borderColor = 'var(--primary)';
+        }
+    });
+
+    // Simulation Workflow
+    function startSimulation() {
+        document.getElementById('upload-panel').style.display = 'none';
+        document.getElementById('simulation-panel').classList.add('active');
+
+        const statuses = [
+            "Scanning document context...",
+            "Identifying key medical terms...",
+            "Cross-referencing normal ranges...",
+            "Generating simplified insights..."
+        ];
+
+        let i = 0;
+        const statusEl = document.getElementById('loading-status');
+        
+        const interval = setInterval(() => {
+            i++;
+            if(i < statuses.length) {
+                statusEl.innerText = statuses[i];
+            } else {
+                clearInterval(interval);
+                showResults();
+            }
+        }, 1400); // Wait 1.4s per state for cool effect
+    }
+
+    function showResults() {
+        document.getElementById('simulation-panel').classList.remove('active');
+        document.getElementById('results-panel').classList.add('active');
+    }
+
+    function resetApp() {
+        document.getElementById('results-panel').classList.remove('active');
+        document.getElementById('upload-panel').style.display = 'block';
+        fileInput.value = '';
+        analyzeBtn.disabled = true;
+        dropArea.querySelector('h3').innerText = 'Drag & drop your report here';
+        dropArea.style.borderColor = '#cbd5e1';
+        dropArea.querySelector('h3').style.color = 'var(--dark)';
+        document.getElementById('chat-messages').innerHTML = '<div class="msg bot">Hello! I\'m your MediScan AI assistant. You can ask me to explain any term from your report in simple words.</div>';
+    }
+
+    // Voice Assistant Logic
+    let recognition;
+    let isListening = false;
+    let synth = window.speechSynthesis;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        // Setting language to en-IN helps with Tanglish/English mixture, or ta-IN for pure Tamil.
+        recognition.lang = 'en-IN'; 
+
+        recognition.onstart = function() {
+            isListening = true;
+            document.getElementById('mic-btn').classList.add('mic-active');
+            let statusText = 'Listening... ';
+            const selected = document.getElementById('bot-lang').value;
+            if(selected === 'tamil') statusText += '(Tamil)';
+            else if(selected === 'auto') statusText += '(Auto)';
+            else statusText += '(English/Tanglish)';
+            document.getElementById('voice-status').innerHTML = `<i class="fa-solid fa-ear-listen" style="color: var(--danger);"></i> ${statusText}`;
+            document.getElementById('voice-status').style.display = 'block';
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('chat-input').value = transcript;
+            sendMessage();
+        };
+
+        recognition.onerror = function(event) {
+            console.error(event.error);
+            stopVoiceRecognition();
+        };
+
+        recognition.onend = function() {
+            stopVoiceRecognition();
+        };
+    } else {
+        console.warn("Speech Recognition API not supported in this browser.");
+    }
+
+    function toggleVoiceRecognition() {
+        if(isListening) stopVoiceRecognition();
+        else startVoiceRecognition();
+    }
+
+    function startVoiceRecognition() {
+        if(recognition && !isListening) {
+            const manualLang = document.getElementById('bot-lang').value;
+            if(manualLang === 'tamil') {
+                recognition.lang = 'ta-IN';
+            } else {
+                recognition.lang = 'en-IN';
+            }
+            recognition.start();
+        } else if(!recognition) {
+            alert("Your browser does not support the Voice Assistant feature.");
+        }
+    }
+
+    function stopVoiceRecognition() {
+        isListening = false;
+        document.getElementById('mic-btn').classList.remove('mic-active');
+        document.getElementById('voice-status').style.display = 'none';
+        if(recognition) recognition.stop();
+    }
+
+    let isSpeakerEnabled = false;
+    function toggleSpeaker() {
+        isSpeakerEnabled = !isSpeakerEnabled;
+        const speakerBtn = document.getElementById('speaker-btn');
+        if(isSpeakerEnabled) {
+            speakerBtn.style.background = 'var(--primary)';
+            speakerBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+        } else {
+            speakerBtn.style.background = 'var(--text-light)';
+            speakerBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            if(synth.speaking) synth.cancel();
+        }
+    }
+
+    function speakResponse(text, lang='en-IN') {
+        if(!isSpeakerEnabled) return;
+        if(synth.speaking) synth.cancel();
+        
+        // Strip out HTML tags and markdown asterisks for clean speech
+        let cleanText = text.replace(/<[^>]*>?/gm, '');
+        cleanText = cleanText.replace(/\*/g, '');
+        
+        let utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = lang; 
+        utterance.rate = 0.95;
+        synth.speak(utterance);
+    }
+
+    // Chatbot Logic
+    function detectLanguage(text) {
+        // First check manual override
+        const manualLang = document.getElementById('bot-lang').value;
+        if (manualLang !== 'auto') {
+            return manualLang;
+        }
+
+        // Match any Tamil unicode characters
+        const tamilRegex = /[\u0B80-\u0BFF]/;
+        if(tamilRegex.test(text)) return 'tamil';
+        
+        // Match common Tanglish words
+        const tanglishKeywords = ['koluppu', 'ratham', 'sarkarai', 'epdi', 'irukku', 'sollunga', 'enna', 'ulla', 'kuraiva', 'adhigama', 'idhu', 'unga', 'ennoda', 'ennakku', 'paththu', 'paathu', 'pannunga', 'enaku', 'irukka', 'va', 'athu', 'ethu', 'eppadi'];
+        const words = text.toLowerCase().split(/\s+/);
+        for(let word of words) {
+            if(tanglishKeywords.includes(word)) return 'tanglish';
+        }
+        
+        return 'english';
+    }
+
+    function handleEnter(e) {
+        if(e.key === 'Enter') sendMessage();
+    }
+
+    function formatBotResponse(text) {
+        return text.replace(/\n/g, '<br>');
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        const chatMessages = document.getElementById('chat-messages');
+
+        // User message
+        chatMessages.innerHTML += `<div class="msg user">${text}</div>`;
+        input.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Bot Response simulation with typying feel
+        const typingId = 'typing-' + Date.now();
+        chatMessages.innerHTML += `<div class="msg bot" id="${typingId}">Thinking... <i class="fa-solid fa-spinner fa-spin"></i></div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        setTimeout(async () => {
+            let response = "";
+            let speechLang = 'en-IN';
+            const lowerText = text.toLowerCase();
+            const lang = detectLanguage(text);
+
+            if(lang === 'tamil') speechLang = 'ta-IN';
+            
+            if(lowerText.includes("ldl") || lowerText.includes("cholesterol") || lowerText.includes("koluppu") || lowerText.includes("கொலஸ்ட்ரால்") || lowerText.includes("கொழுப்பு")) {
+                if (lang === 'tamil') {
+                    response = "<b>நோயின் நிலை (Stage of Disease):</b> ஆரம்ப நிலை / எச்சரிக்கை நிலை\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• உங்கள் LDL கொலஸ்ட்ரால் (கெட்ட கொழுப்பு) அளவு 140 mg/dL உள்ளது, இது இயல்பை விட கொஞ்சம் அதிகம்.\n• கெட்ட கொழுப்பு அதிகரித்தால், இரத்த நாளங்களில் அடைப்பு ஏற்பட்டு இதய பிரச்சினைகள் வரலாம்.\n• கவலைப்பட வேண்டாம், இது ஆரம்ப நிலைதான், எளிதாக கட்டுப்படுத்தலாம்.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. எண்ணெயில் பொரித்த உணவுகள் மற்றும் துரித உணவுகளை தவிர்க்கவும்.\n2. தினமும் 30 நிமிடம் நடைபயிற்சி அல்லது உடற்பயிற்சி செய்யவும்.\n3. புதிய பழங்கள், காய்கறிகள் மற்றும் நார்ச்சத்து உள்ள உணவுகளை அதிகம் சேர்க்கவும்.\n4. 3 மாதங்களுக்குப் பிறகு மீண்டும் பரிசோதனை செய்து பார்க்கவும்.";
+                } else if (lang === 'tanglish') {
+                    response = "<b>Stage of Disease:</b> Early Stage / Warning Stage (Aaramba Kattam)\n\n<b>Main Points:</b>\n• Unga LDL Cholesterol (Bad cholesterol) level 140 mg/dL irukku, idhu normal-vida konjam adhigam (elevated).\n• Bad cholesterol adhigam aana, blood vessels-la blockages uruvaagi heart problems varalam. (Iruthaya kolaarugal varalam).\n• But don't worry, idhu aaramba kattam (early stage) thaan, easy ah control pannidalam.\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Ennai palagaram (fried foods) matrum junk foods aviod pannunga.\n2. Daily 30 minutes walking or exercise pannunga.\n3. Fresh fruits, vegetables, and fiber-rich foods adhigam eduthukkonga.\n4. Oru 3 months kalichu marubadiyum test panni paarkavum.";
+                } else {
+                    response = "<b>Stage of Disease:</b> Early Stage / Warning Stage\n\n<b>Main Points:</b>\n• Your LDL Cholesterol (Bad cholesterol) level is 140 mg/dL, which is slightly elevated.\n• High bad cholesterol can cause blockages in blood vessels, leading to heart problems.\n• Don't worry, this is an early stage and can be easily controlled.\n\n<b>Suggestions / Medical Advice:</b>\n1. Avoid fried foods and junk foods.\n2. Do 30 minutes of walking or exercise daily.\n3. Eat fresh fruits, vegetables, and fiber-rich foods.\n4. Re-test after 3 months.";
+                }
+
+            } else if (lowerText.includes("hemoglobin") || lowerText.includes("iron") || lowerText.includes("blood") || lowerText.includes("ratham") || lowerText.includes("ரத்தம்") || lowerText.includes("ஹீமோகுளோபின்")) {
+                if (lang === 'tamil') {
+                    response = "<b>நோயின் நிலை (Stage of Disease):</b> லேசான இரத்த சோகை (Mild Anemia)\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• உங்கள் ஹீமோகுளோபின் அளவு 10.2 g/dL உள்ளது, இது இயல்பை விட குறைவு.\n• ஹீமோகுளோபின் இரத்தத்தில் ஆக்ஸிஜனைக் கொண்டு செல்ல உதவுகிறது. இது குறைந்தால் உங்களுக்கு எப்போதும் சோர்வாக இருக்கும்.\n• உங்களுக்கு லேசான இரத்த சோகை உள்ளது, ஆனால் பயப்படக்கூடிய அளவிற்கு ஆபத்து இல்லை.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. இரும்புச்சத்து அதிகம் உள்ள உணவுகளை சாப்பிடவும் (உ.ம்: கீரை, பேரீச்சம்பழம், முருங்கைக்காய்).\n2. இரும்புச்சத்தை உடல் ஈர்க்க வைட்டமின் சி உள்ள பழங்களை (ஆரஞ்சு, எலுமிச்சை) சாப்பிடவும்.\n3. மருத்துவரின் ஆலோசனையுடன் இரும்புச்சத்து டானிக் அல்லது மாத்திரை எடுத்துக் கொள்ளலாம்.";
+                } else if (lang === 'tanglish') {
+                    response = "<b>Stage of Disease:</b> Mild Anemia (Ratha Vilivu - Aaramba Kattam)\n\n<b>Main Points:</b>\n• Unga Hemoglobin level 10.2 g/dL irukku, idhu normal-a vida kammi (low).\n• Hemoglobin rathathula oxygen carry panna uthavum. Idhu kammi aana ungalukku eppovum tired-ah (sowrvaaga) irukkum.\n• Ratha vilivu (Anemia) irukku, but bayapudura alavuku serious illa.\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Iron-saththu adhigama irukka foods sapdunga (e.g., Keerai/Spinach, Dates, Murungakkai).\n2. Vitamin C ulla fruits (Orange, Lemon) sapdunga, idhu iron-a absorb panna help pannum.\n3. Doctor-kitta kettu oru iron syrup or tablet eduthukkalam.";
+                } else {
+                    response = "<b>Stage of Disease:</b> Mild Anemia\n\n<b>Main Points:</b>\n• Your Hemoglobin level is 10.2 g/dL, which is lower than normal.\n• Hemoglobin helps carry oxygen in the blood. A low level causes tiredness and weakness.\n• You have mild anemia, but it is not too serious.\n\n<b>Suggestions / Medical Advice:</b>\n1. Eat iron-rich foods like spinach, dates, and drumsticks.\n2. Consume Vitamin C-rich fruits (oranges, lemons) to help iron absorption.\n3. Consult a doctor for an iron syrup or supplement if needed.";
+                }
+
+            } else if (lowerText.includes("sugar") || lowerText.includes("glucose") || lowerText.includes("sarkarai") || lowerText.includes("சர்க்கரை")) {
+                if (lang === 'tamil') {
+                    response = "<b>நோயின் நிலை (Stage of Disease):</b> இயல்பு / ஆரோக்கியம் (Normal)\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• உங்கள் வெறும் வயிற்று இரத்த சர்க்கரை அளவு 92 mg/dL உள்ளது. இது மிகவும் இயல்பானது.\n• உங்களுக்கு சர்க்கரை நோய் (நீரிழிவு நோய்) இல்லை. நீங்கள் நலமாக உள்ளீர்கள்!\n• இது நல்ல ஆரோக்கியத்திற்கான ஒரு சிறந்த அறிகுறியாகும்.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. இப்போது எந்த வகையிலும் பயப்படத் தேவையில்லை.\n2. இதே ஆரோக்கியமான உணவு முறை மற்றும் வாழ்க்கை முறையைத் தொடரவும்.\n3. இந்த அளவை பராமரிக்க இனிப்புகளை அளவாக எடுத்துக் கொள்ளவும்.";
+                } else if (lang === 'tanglish') {
+                    response = "<b>Stage of Disease:</b> Normal / Healthy (Endha pirachanaiyum illa)\n\n<b>Main Points:</b>\n• Unga Fasting Blood Sugar 92 mg/dL irukku. Idhu romba normal.\n• Ungalukku diabetes (sarkarai noi) illa. You are completely fine!\n• This is a very good sign of health. (Neenga nalla arokkiyama irukkinga).\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Ippodheku endha bayamum thevai illa.\n2. Idhe healthy diet matrum lifestyle-a continue pannunga.\n3. Sweet-a limit-ah saapdunga to maintain this.";
+                } else {
+                    response = "<b>Stage of Disease:</b> Normal / Healthy\n\n<b>Main Points:</b>\n• Your Fasting Blood Sugar is 92 mg/dL. This is perfectly normal.\n• You do not have diabetes. You are completely fine!\n• This is a very good sign of health.\n\n<b>Suggestions / Medical Advice:</b>\n1. There is no need to worry right now.\n2. Continue this healthy diet and lifestyle.\n3. Eat sweets in moderation to maintain these levels.";
+                }
+
+            } else if (lowerText.includes("blood pressure") || lowerText.includes("bp") || lowerText.includes("hypertension") || lowerText.includes("ரத்த அழுத்தம்") || lowerText.includes("pressure")) {
+                if (lang === 'tamil') {
+                    response = "<b>நோயின் நிலை (Stage of Disease):</b> இயல்பு/கண்காணிக்கவும்\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• ரத்த அழுத்தம் (BP) இயல்பாக 120/80 mmHg இருக்க வேண்டும்.\n• இது அதிகமாக இருந்தால் இதயத்திற்கு அழுத்தம் கொடுக்கும்.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. உணவில் உப்பைக் குறைக்கவும்.\n2. அதிக மன அழுத்தம் இல்லாமல் ஓய்வெடுக்கவும்.";
+                } else if (lang === 'tanglish') {
+                    response = "<b>Stage of Disease:</b> Normal/Monitor Monitor (கண்காணிக்கவும்)\n\n<b>Main Points:</b>\n• Normal BP 120/80 mmHg irukkanum.\n• BP adhigama irundha idhayathuku nalladhu illa (heart risk varalam).\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Saapatla uppu (salt) kammi pannunga.\n2. Tension or over-stress illama relax panni thoongavum.";
+                } else {
+                    response = "<b>Stage of Disease:</b> Normal / Monitor\n\n<b>Main Points:</b>\n• A healthy Blood Pressure is generally around 120/80 mmHg.\n• Elevated BP forces your heart to work harder and increases heart disease risk.\n\n<b>Suggestions / Medical Advice:</b>\n1. Reduce salt (sodium) intake in your diet.\n2. Get plenty of restful sleep and manage stress effectively.";
+                }
+
+            } else if (lowerText.includes("thyroid") || lowerText.includes("tsh") || lowerText.includes("தைராய்டு")) {
+                if (lang === 'tamil') {
+                    response = "<b>நோயின் நிலை (Stage of Disease):</b> தைராய்டு நிலைப்புத்தன்மை (Thyroid Levels)\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• TSH என்பது தைராய்டு சுரப்பியை சீராக இயங்கவைக்கும் ஹார்மோன்.\n• இதன் குறைபாடு அல்லது அதிகரிப்பு உடல் உழைப்பு, எடை கூற்றம்/குறைவு ஆகியவற்றை பாதிக்கும்.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. தினமும் சீரான அயோடின் அளவுள்ள உப்பைப் பயன்படுத்தவும்.\n2. தைராய்டு பிரச்சனைகள் இருப்பின் மருத்துவரை சந்தித்து மாத்திரைகளை எடுத்துக்கொள்ளவும்.";
+                } else if (lang === 'tanglish') {
+                    response = "<b>Stage of Disease:</b> Thyroid Maintenance\n\n<b>Main Points:</b>\n• TSH (Thyroid) hormone namakku energy and weight maintain panna mukkiyam.\n• Idhu kammiya aagavum koodathu adhigamakavum koodadhu.\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Proper iodine salt sapattla serthukkonga.\n2. Thodarndhu thyroid issues irundha doctor-a consult panni tests pannavum.";
+                } else {
+                    response = "<b>Stage of Disease:</b> Thyroid Maintenance\n\n<b>Main Points:</b>\n• TSH levels indicate how well your thyroid gland is working.\n• The thyroid controls your body's metabolism, energy levels, and weight.\n\n<b>Suggestions / Medical Advice:</b>\n1. Ensure you consume adequate iodine.\n2. If you notice unexplained weight changes or extreme fatigue, consult an endocrinologist.";
+                }
+
+            } else if (lowerText.includes("report") || lowerText.includes("result") || lowerText.includes("overall")) {
+                let textReply = "<b>Stage of Disease:</b> Generalized Review\n\n<b>Main Points:</b>\n• Your report shows generally normal Sugar levels, but slightly elevated Cholesterol and slightly low Hemoglobin.\n\n<b>Suggestions / Medical Advice:</b>\n1. Follow the AI diet recommendations on your dashboard.\n2. Recheck your parameters in 3 months.";
+                if (lang === 'tamil') textReply = "<b>நோயின் நிலை (Stage of Disease):</b> பொதுவான நிலை\n\n<b>முக்கிய குறிப்புகள் (Main Points):</b>\n• உங்கள் சர்க்கரை அளவு சாதாரணமாக உள்ளது. ஆனால் கொழுப்பு அளவு (Cholesterol) சற்று அதிகம் மற்றும் ஹீமோகுளோபின் சற்று குறைவாக உள்ளது.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n1. உணவு கட்டுப்பாட்டைக் கடைப்பிடிக்கவும் மற்றும் நடைப்பயிற்சி மேற்கொள்ளவும்.\n2. மூன்று மாதங்கள் கழித்து மீண்டும் பரிசோதனை செய்யவும்.";
+                if (lang === 'tanglish') textReply = "<b>Stage of Disease:</b> Overall Report Review\n\n<b>Main Points:</b>\n• Unga report la Sugar normal ah irukku. Aana Cholesterol konjam adhigam and Hemoglobin konjam kammi ah irukku.\n\n<b>Suggestions / Patient-kku Med-Advice:</b>\n1. Nalla healthy aana diet follow pannunga and daily exercise pannunga.\n2. 3 months kazhichu marubadi test panni paarkavum.";
+                response = textReply;
+
+            } else {
+                const GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || "";
+                if(GEMINI_API_KEY) {
+                    let languageInstruction = "English";
+                    if(lang === 'tamil') languageInstruction = "Tamil text (in Tamil script)";
+                    if(lang === 'tanglish') languageInstruction = "Tanglish (Tamil meaning, but written in English alphabetic characters)";
+
+                    const systemPrompt = `You are MediScan AI, a medical assistant. The user is asking a medical question. Explain it simply.
+Format your response exactly like this:
+<b>Stage of Disease:</b> (Write stage if applicable, otherwise state 'N/A')
+
+<b>Main Points:</b>
+• Point 1
+• Point 2
+
+<b>Suggestions / Patient-kku Med-Advice:</b>
+1. Suggestion 1
+2. Suggestion 2
+
+Crucial: YOU MUST REPLY COMPLETELY IN ${languageInstruction}. Keep it simple and understandable for a patient.`;
+                    
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                system_instruction: { parts: [{ text: systemPrompt }] },
+                                contents: [{ parts: [{ text: text }] }]
+                            })
+                        });
+                        const data = await res.json();
+                        if(data.candidates && data.candidates[0]) {
+                            response = data.candidates[0].content.parts[0].text;
+                        } else {
+                            response = "Sorry, I am currently unable to process this request. Please try again later.";
+                        }
+                    } catch(e) {
+                        response = "Failed to connect to the response server. Check your connection.";
+                        console.error(e);
+                    }
+                } else {
+                    if (lang === 'tamil') {
+                        response = "<b>விளக்கம்:</b>\nவணக்கம்! நான் உங்கள் MediScan AI உதவியாளர். உங்கள் மருத்துவ அறிக்கையில் உள்ள புரியாத மருத்துவ வார்த்தைகளை (கொலஸ்ட்ரால், சர்க்கரை, பி.பி, ஹீமோகுளோபின்) நீங்கள் கேட்கலாம்.\n\n<b>பரிந்துரைகள் (Suggestions):</b>\n• \"எனது கொலஸ்ட்ரால் அளவு எப்படி உள்ளது?\" என்று கேட்டுப் பார்க்கவும்.";
+                    } else if (lang === 'tanglish') {
+                        response = "<b>Explanation:</b>\nVanakkam! Naan unga MediScan AI Assistant. Ungalukku medical report-la endha term puriyalayo (Cholesterol, Sugar, BP, Hemoglobin), adhay kekaalam. Naan Tamil, English, and Tanglish-la explain pannuven.\n\n<b>Suggestions:</b>\n• Please ask about \"BP\", \"Thyroid\", \"Cholesterol\", \"Hemoglobin\", or \"Sugar\".";
+                    } else {
+                        response = "<b>Explanation:</b>\nHello! I am your MediScan AI Assistant. Feel free to ask about any term in your report (like BP, Thyroid, Cholesterol, Sugar, Hemoglobin).\n\n<b>Suggestions:</b>\n• Try asking \"Can you explain my cholesterol level?\" or \"What does my report say?\"";
+                    }
+                }
+            }
+            
+            // Remove typing indicator
+            const typingIndicator = document.getElementById(typingId);
+            if(typingIndicator) typingIndicator.remove();
+
+            const formattedResponse = formatBotResponse(response);
+            chatMessages.innerHTML += `<div class="msg bot">${formattedResponse}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Speak the response using Voice Assistant
+            speakResponse(response, speechLang);
+
+        }, 1200); // 1.2s delay mimicking AI thinking
+    }
+</script>
+
+</body>
+</html>
